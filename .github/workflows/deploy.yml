@@ -36,10 +36,14 @@ jobs:
           fi
 
       - name: Terraform Init
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ env.HOME }}/gcp-key.json
         run: terraform init -backend-config="${{ github.event.inputs.environment }}/${{ github.event.inputs.environment }}.backend.config"
         working-directory: terraform
 
       - name: Terraform Apply
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ env.HOME }}/gcp-key.json
         run: terraform apply -auto-approve -var-file="${{ github.event.inputs.environment }}/${{ github.event.inputs.environment }}.tfvars"
         working-directory: terraform
 
