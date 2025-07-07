@@ -36,7 +36,10 @@ jobs:
           fi
 
       - name: Terraform Init
-        run: terraform init -backend-config="credentials=${HOME}/gcp-key.json"
+        run: terraform init -backend-config="${{ github.event.inputs.environment }}/backend.config"
+        working-directory: terraform
 
       - name: Terraform Apply
-        run: terraform apply -auto-approve -var-file="terraform/${{ github.event.inputs.environment }}/${{ github.event.inputs.environment }}.tfvars"
+        run: terraform apply -auto-approve -var-file="${{ github.event.inputs.environment }}/${{ github.event.inputs.environment }}.tfvars"
+        working-directory: terraform
+
