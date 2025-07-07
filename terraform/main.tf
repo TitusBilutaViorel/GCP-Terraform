@@ -1,7 +1,6 @@
 provider "google" {
   project = var.project_id
   region  = var.region
-  credentials = file("${path.module}/gcp-key.json")
 }
 
 resource "google_cloud_run_service" "default" {
@@ -37,7 +36,6 @@ resource "google_secret_manager_secret" "my_secret" {
 
 resource "google_secret_manager_secret_version" "my_secret_version" {
   secret      = google_secret_manager_secret.my_secret.id
-  #secret_data = file(var.secret_env_file)
 }
 
 terraform {
