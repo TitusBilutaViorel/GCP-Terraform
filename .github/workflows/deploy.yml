@@ -31,14 +31,16 @@ jobs:
         run: |
           if [[ "${{ github.event.inputs.environment }}" == "dev" ]]; then
             echo "${{ secrets.DEV_KEY }}" > "${HOME}/gcp-key.json"
-          else
+              else
             echo "${{ secrets.BETA_KEY }}" > "${HOME}/gcp-key.json"
           fi
+          echo "GOOGLE_APPLICATION_CREDENTIALS=${HOME}/gcp-key.json" >> $GITHUB_ENV
+
 
       - name: Terraform Init
         run: terraform init -backend-config="${{ github.event.inputs.environment }}/backend.config"
         working-directory: terraform
 
       - name: Terraform Apply
-        run: terraform apply -auto-approve -var-file="${{ github.event.inputs.environment }}/${{ github.event.inputs.environment }}.tfvars"
-        working-directory: terraform
+        run: terraform apply -auto-approve -var-file="${{ github.event.inputs.environment }}.tfvars"
+        working-directory: terraform/${{ github.event.inputs.environment }}
