@@ -13,37 +13,27 @@ on:
 
 jobs:
   deploy:
-    name: Terraform Apply
     runs-on: ubuntu-latest
-
-    env:
-      PROJECT_ID: oceanic-muse-464012-k2
-      REGION: europe-west1
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Authenticate to GCP via Workload Identity
+        uses: google-github-actions/auth@v2
+        with:
+          token_format: 'access_token'
+          project_id: 'oceanic-muse-464012-k2'
+          workload_identity_provider: 'projects/123456789/locations/global/workloadIdentityPools/github-pool/providers/github-provider'
+          service_account: ${{ github.event.inputs.environment == 'dev' && 'dev-97@oceanic-muse-464012-k2.iam.gserviceaccount.com' || 'beta-13@oceanic-muse-464012-k2.iam.gserviceaccount.com' }}
+
       - name: Set up Terraform
         uses: hashicorp/setup-terraform@v3
 
-      - name: Authenticate with GCP
-        run: |
-          if [[ "${{ github.event.inputs.environment }}" == "dev" ]]; then
-            printf '%s' "${{ secrets.DEV_KEY }}" > "${HOME}/gcp-key.json"
-          else
-            printf '%s' "${{ secrets.BETA_KEY }}" > "${HOME}/gcp-key.json"
-          fi
-
       - name: Terraform Init
-        env:
-          GOOGLE_APPLICATION_CREDENTIALS: ${{ env.HOME }}/gcp-key.json
-        run: terraform init -backend-config="${{ github.event.inputs.environment }}/${{ github.event.inputs.environment }}.backend.config"
+        run: terraform init -backend-config="${{ github.event.inputs.environment }}.backend.config"
         working-directory: terraform
 
       - name: Terraform Apply
-        env:
-          GOOGLE_APPLICATION_CREDENTIALS: ${{ env.HOME }}/gcp-key.json
         run: terraform apply -auto-approve -var-file="${{ github.event.inputs.environment }}/${{ github.event.inputs.environment }}.tfvars"
         working-directory: terraform
-
