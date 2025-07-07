@@ -26,8 +26,6 @@ jobs:
       - name: Authenticate to GCP via Workload Identity
         uses: google-github-actions/auth@v2
         with:
-          token_format: 'access_token'
-          project_id: 'oceanic-muse-464012-k2'
           workload_identity_provider: 'projects/172250116490/locations/global/workloadIdentityPools/github-pool/providers/github-provider'
           service_account: ${{ github.event.inputs.environment == 'dev' && 'dev-97@oceanic-muse-464012-k2.iam.gserviceaccount.com' || 'beta-13@oceanic-muse-464012-k2.iam.gserviceaccount.com' }}
 
