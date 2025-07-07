@@ -26,5 +26,4 @@ variable "env" {
 variable "secret_env_value" {
   description = "Secret value passed from GitHub"
   type        = string
-  sensitive   = true
 }
