@@ -37,5 +37,5 @@ jobs:
         working-directory: terraform
 
       - name: Terraform Apply
-        run: terraform apply -auto-approve -var-file="${{ github.event.inputs.environment }}/${{ github.event.inputs.environment }}.tfvars"
+        run: terraform apply -auto-approve -var="secret_env_value=${{ secrets.SECRET_ENV_VALUE }}" -var-file="${{ github.event.inputs.environment }}/${{ github.event.inputs.environment }}.tfvars"
         working-directory: terraform

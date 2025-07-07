@@ -22,3 +22,9 @@ variable "env" {
   description = "Environment type (e.g., dev, beta, prod)"
   type        = string
 }
+
+variable "secret_env_value" {
+  description = "Secret value passed from GitHub"
+  type        = string
+  sensitive   = true
+}
