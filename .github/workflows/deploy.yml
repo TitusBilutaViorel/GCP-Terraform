@@ -27,16 +27,16 @@ jobs:
       - name: Set up Terraform
         uses: hashicorp/setup-terraform@v3
 
-      - name: Decode and write GCP credentials
+      - name: Authenticate with GCP
         run: |
           if [[ "${{ github.event.inputs.environment }}" == "dev" ]]; then
-            echo "${{ secrets.DEV_KEY }}" > "${HOME}/gcp-key.json"
+            printf '%s' "${{ secrets.DEV_KEY }}" > "${HOME}/gcp-key.json"
           else
-            echo "${{ secrets.BETA_KEY }}" > "${HOME}/gcp-key.json"
+            printf '%s' "${{ secrets.BETA_KEY }}" > "${HOME}/gcp-key.json"
           fi
 
       - name: Terraform Init
-        run: terraform init -backend-config="${{ github.event.inputs.environment }}/backend.config"
+        run: terraform init -backend-config="${{ github.event.inputs.environment }}/${{ github.event.inputs.environment }}.backend.config"
         working-directory: terraform
 
       - name: Terraform Apply
