@@ -1,0 +1,5 @@
+project_id = "oceanic-muse-464012-k2"
+region     = "europe-west1"
+image      = "europe-west1-docker.pkg.dev/oceanic-muse-464012-k2/dev-repo/pythonimg"
+service_name = "python-service-dev"
+env = "dev"

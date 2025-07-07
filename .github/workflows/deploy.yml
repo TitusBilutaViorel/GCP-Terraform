@@ -1,0 +1,42 @@
+name: Deploy to GCP with Terraform
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        type: choice
+        description: "Select environment to deploy"
+        required: true
+        options:
+          - dev
+          - beta
+
+jobs:
+  deploy:
+    name: Terraform Apply
+    runs-on: ubuntu-latest
+
+    env:
+      PROJECT_ID: oceanic-muse-464012-k2
+      REGION: europe-west1
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Decode and write GCP credentials
+        run: |
+          if [[ "${{ github.event.inputs.environment }}" == "dev" ]]; then
+            echo "${{ secrets.DEV_KEY }}" > "${HOME}/gcp-key.json"
+          else
+            echo "${{ secrets.BETA_KEY }}" > "${HOME}/gcp-key.json"
+          fi
+
+      - name: Terraform Init
+        run: terraform init -backend-config="credentials=${HOME}/gcp-key.json"
+
+      - name: Terraform Apply
+        run: terraform apply -auto-approve -var-file="${{ github.event.inputs.environment }}.tfvars"
