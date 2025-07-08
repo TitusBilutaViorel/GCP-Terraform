@@ -2,14 +2,7 @@ name: Deploy to GCP with Terraform
 
 on:
   workflow_dispatch:
-    inputs:
-      environment:
-        type: choice
-        description: "Select environment to deploy"
-        required: true
-        options:
-          - dev
-          - beta
+    
 
 permissions:
   id-token: write
@@ -18,40 +11,39 @@ permissions:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    environment: ${{ github.event.inputs.environment }}
+    environment: ${{ github.ref == 'refs/heads/main' && 'beta' || github.ref == 'refs/heads/develop' && 'dev' }}
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref }}
 
-      - name: Set environment name
-        id: set-env
-        run: echo "env_name=${{ github.event.inputs.environment }}" >> $GITHUB_OUTPUT
-
-      - name: Select service account
-        id: sa
+      - name: Set environment variable
+        id: set_env
         run: |
-          if [[ "${{ steps.set-env.outputs.env_name }}" == "dev" ]]; then
-            echo "sa_dev_beta=${{ vars.DEV_SA }}" >> $GITHUB_OUTPUT
+          if [[ "${GITHUB_REF}" == "refs/heads/main" ]]; then
+            echo "env=beta" >> $GITHUB_OUTPUT
+          elif [[ "${GITHUB_REF}" == "refs/heads/develop" ]]; then
+            echo "env=dev" >> $GITHUB_OUTPUT
           else
-            echo "sa_dev_beta=${{ vars.BETA_SA }}" >> $GITHUB_OUTPUT
+            echo "Unsupported branch: ${GITHUB_REF}"
+            exit 1
           fi
 
       - name: Authenticate to GCP via Workload Identity
         uses: google-github-actions/auth@v2
         with:
           workload_identity_provider: 'projects/172250116490/locations/global/workloadIdentityPools/github-pool/providers/github-provider'
-          service_account: ${{ steps.sa.outputs.sa_dev_beta }}
+          service_account: ${{ steps.set_env.outputs.env == 'dev' && vars.DEV_SA || vars.BETA_SA }}
 
       - name: Set up Terraform
         uses: hashicorp/setup-terraform@v3
 
       - name: Terraform Init
-        run: terraform init -backend-config="${{ github.event.inputs.environment }}/${{ github.event.inputs.environment }}.backend.config"
+        run: terraform init -backend-config="${{ steps.set_env.outputs.env }}/${{ steps.set_env.outputs.env }}.backend.config"
         working-directory: terraform
 
       - name: Terraform Apply
-        run: terraform apply -auto-approve \
-              -var="secret_env_value=${{ secrets.SECRET_ENV_VALUE }}" \
-              -var-file="${{ github.event.inputs.environment }}/${{ github.event.inputs.environment }}.tfvars"
+        run: terraform apply -auto-approve -var="secret_env_value=${{ secrets.SECRET_ENV_VALUE }}" -var-file="${{ steps.set_env.outputs.env }}/${{ steps.set_env.outputs.env }}.tfvars"
         working-directory: terraform
