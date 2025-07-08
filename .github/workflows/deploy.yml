@@ -19,16 +19,13 @@ jobs:
         with:
           ref: ${{ github.ref }}
 
-      - name: Set environment variable
+      - name: Set environment variable based on branch
         id: set_env
         run: |
-          if [[ "${GITHUB_REF}" == "refs/heads/main" ]]; then
-            echo "env=beta" >> $GITHUB_OUTPUT
-          elif [[ "${GITHUB_REF}" == "refs/heads/develop" ]]; then
-            echo "env=dev" >> $GITHUB_OUTPUT
+          if [[ "${GITHUB_REF##*/}" == "main" ]]; then
+            echo "::set-output name=env::beta"
           else
-            echo "Unsupported branch: ${GITHUB_REF}"
-            exit 1
+            echo "::set-output name=env::dev"
           fi
 
       - name: Authenticate to GCP via Workload Identity
