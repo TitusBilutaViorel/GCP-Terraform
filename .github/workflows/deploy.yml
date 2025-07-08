@@ -1,10 +1,11 @@
-name: Deploy to GCP with Terraform
+name: Deploy to GCP with Terraform 
 
 on:
   push:
     branches:
       - main
       - develop
+      - staging
   workflow_dispatch:
 
 permissions:
@@ -14,7 +15,7 @@ permissions:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    environment: ${{ github.ref == 'refs/heads/main' && 'beta' || github.ref == 'refs/heads/develop' && 'dev' }}
+    environment: ${{ github.ref == 'refs/heads/main' && 'prod' || github.ref == 'refs/heads/develop' && 'dev' || github.ref == 'refs/heads/staging' && 'beta'}}
 
     steps:
       - name: Checkout code
@@ -26,9 +27,11 @@ jobs:
         id: set_env
         run: |
           if [[ "${GITHUB_REF##*/}" == "main" ]]; then
-            echo "::set-output name=env::beta"
+            echo "env=prod" >> $GITHUB_OUTPUT
+          elif [[ "${GITHUB_REF##*/}" == "staging" ]]; then
+            echo "env=beta" >> $GITHUB_OUTPUT
           else
-            echo "::set-output name=env::dev"
+            echo "env=dev" >> $GITHUB_OUTPUT
           fi
 
       - name: Authenticate to GCP via Workload Identity
