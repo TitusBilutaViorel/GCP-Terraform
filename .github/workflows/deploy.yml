@@ -1,4 +1,4 @@
-name: Deploy to GCP with Terraform 
+name: Deploy or Destroy with Terraform
 
 on:
   push:
@@ -7,24 +7,23 @@ on:
       - develop
       - staging
   workflow_dispatch:
+    inputs:
+      destroy:
+        description: 'Destroy infrastructure?'
+        required: false
+        default: 'false'
 
 permissions:
   id-token: write
   contents: read
 
 jobs:
-  deploy:
+  set-env:
     runs-on: ubuntu-latest
-    environment: ${{ github.ref == 'refs/heads/main' && 'prod' || github.ref == 'refs/heads/develop' && 'dev' || github.ref == 'refs/heads/staging' && 'beta'}}
-
+    outputs:
+      env: ${{ steps.setenv.outputs.env }}
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ github.ref }}
-
-      - name: Set environment variable based on branch
-        id: set_env
+      - id: setenv
         run: |
           if [[ "${GITHUB_REF##*/}" == "main" ]]; then
             echo "env=prod" >> $GITHUB_OUTPUT
@@ -33,6 +32,15 @@ jobs:
           else
             echo "env=dev" >> $GITHUB_OUTPUT
           fi
+
+  deploy:
+    needs: set-env
+    runs-on: ubuntu-latest
+    environment: ${{ needs.set-env.outputs.env }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
       - name: Authenticate to GCP via Workload Identity
         uses: google-github-actions/auth@v2
@@ -45,9 +53,18 @@ jobs:
         uses: hashicorp/setup-terraform@v3
 
       - name: Terraform Init
-        run: terraform init -backend-config="${{ steps.set_env.outputs.env }}/${{ steps.set_env.outputs.env }}.backend.config"
+        run: terraform init -backend-config="${{ needs.set-env.outputs.env }}/${{ needs.set-env.outputs.env }}.backend.config"
         working-directory: terraform
 
-      - name: Terraform Apply
-        run: terraform apply -auto-approve -var="secret_env_value=${{ secrets.SECRET_ENV_VALUE }}" -var-file="${{ steps.set_env.outputs.env }}/${{ steps.set_env.outputs.env }}.tfvars"
+      - name: Terraform Apply or Destroy
+        run: |
+          if [[ "${{ github.event.inputs.destroy }}" == "true" ]]; then
+            terraform destroy -auto-approve \
+              -var="secret_env_value=${{ secrets.SECRET_ENV_VALUE }}" \
+              -var-file="${{ needs.set-env.outputs.env }}/${{ needs.set-env.outputs.env }}.tfvars"
+          else
+            terraform apply -auto-approve \
+              -var="secret_env_value=${{ secrets.SECRET_ENV_VALUE }}" \
+              -var-file="${{ needs.set-env.outputs.env }}/${{ needs.set-env.outputs.env }}.tfvars"
+          fi
         working-directory: terraform
