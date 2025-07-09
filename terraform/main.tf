@@ -8,6 +8,7 @@ resource "google_cloud_run_service" "default" {
   location = var.region
   template {
     spec {
+      service_account_name = var.service_account_email 
       containers {
         image = var.image
       }

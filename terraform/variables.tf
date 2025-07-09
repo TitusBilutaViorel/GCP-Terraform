@@ -27,3 +27,8 @@ variable "secret_env_value" {
   description = "Secret value passed from GitHub"
   type        = string
 }
+
+variable "service_account_email" {
+  description = "The email of the service account Cloud Run should use."
+  type        = string
+}

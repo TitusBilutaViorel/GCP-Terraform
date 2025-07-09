@@ -61,10 +61,12 @@ jobs:
           if [[ "${{ github.event.inputs.destroy }}" == "true" ]]; then
             terraform destroy -auto-approve \
               -var="secret_env_value=${{ secrets.SECRET_ENV_VALUE }}" \
+              -var="service_account_email=${{ vars.SA_NAME }}" \
               -var-file="${{ needs.set-env.outputs.env }}/${{ needs.set-env.outputs.env }}.tfvars"
           else
             terraform apply -auto-approve \
               -var="secret_env_value=${{ secrets.SECRET_ENV_VALUE }}" \
+              -var="service_account_email=${{ vars.SA_NAME }}" \
               -var-file="${{ needs.set-env.outputs.env }}/${{ needs.set-env.outputs.env }}.tfvars"
           fi
         working-directory: terraform
