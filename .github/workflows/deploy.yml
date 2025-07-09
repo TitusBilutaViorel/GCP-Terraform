@@ -41,7 +41,7 @@ jobs:
         uses: google-github-actions/auth@v2
         with:
           workload_identity_provider: 'projects/172250116490/locations/global/workloadIdentityPools/github-pool/providers/github-provider'
-          service_account: ${{ env.SA_NAME }}
+          service_account: ${{ vars.SA_NAME }}
           project_id: oceanic-muse-464012-k2
 
       - name: Set up Terraform
