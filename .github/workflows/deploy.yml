@@ -64,6 +64,10 @@ jobs:
         run: |
           docker build -t ${{ steps.set-image-uri.outputs.image_uri }} ./app
 
+      - name: Tag image
+        run: |
+          docker tag pythonimg ${{ steps.set-image-uri.outputs.image_uri }}
+
       - name: Push image to Artifact Registry
         run: |
           docker push ${{ steps.set-image-uri.outputs.image_uri }}
