@@ -57,7 +57,7 @@ jobs:
         id: set-image-uri
         run: |
           ENV=${{ needs.set-env.outputs.env }}
-          IMAGE_URI="europe-west1-docker.pkg.dev/oceanic-muse-464012-k2/${ENV}-repo/python-service-${ENV}:${ENV}-${GITHUB_SHA}"
+          IMAGE_URI="europe-west1-docker.pkg.dev/oceanic-muse-464012-k2/${ENV}-repo/pythonimg:${GITHUB_SHA}"
           echo "image_uri=$IMAGE_URI" >> $GITHUB_OUTPUT
 
       - name: Build Docker image
