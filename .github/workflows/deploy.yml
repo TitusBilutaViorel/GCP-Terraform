@@ -36,6 +36,7 @@ jobs:
   build-and-push-image:
     needs: set-env
     runs-on: ubuntu-latest
+    environment: ${{ needs.set-env.outputs.env }}
     outputs:
       image_uri: ${{ steps.set-image-uri.outputs.image_uri }}
 
