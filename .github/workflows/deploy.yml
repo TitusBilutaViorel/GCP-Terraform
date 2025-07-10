@@ -105,4 +105,5 @@ jobs:
               -var="service_account_email=${{ vars.SA_NAME }}" \
               -var="image=${{ needs.build-and-push-image.outputs.image_uri }}" \
               -var-file="${{ needs.set-env.outputs.env }}/${{ needs.set-env.outputs.env }}.tfvars"
+          fi
         working-directory: terraform
