@@ -61,9 +61,8 @@ jobs:
 
       - name: Submit Cloud Build
         run: |
-          gcloud builds submit \
+          gcloud builds submit app \
             --tag "${{ steps.set-image-uri.outputs.image_uri }}" \
-            --dockerfile app/Dockerfile \
             --project=oceanic-muse-464012-k2
 
   deploy:
