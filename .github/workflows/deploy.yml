@@ -33,8 +33,43 @@ jobs:
             echo "env=dev" >> $GITHUB_OUTPUT
           fi
 
-  deploy:
+  build-and-push-image:
     needs: set-env
+    runs-on: ubuntu-latest
+    environment: ${{ needs.set-env.outputs.env }}
+    outputs:
+      image_uri: ${{ steps.set-image-uri.outputs.image_uri }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Authenticate to GCP via Workload Identity
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: 'projects/172250116490/locations/global/workloadIdentityPools/github-pool/providers/github-provider'
+          service_account: ${{ vars.SA_NAME }}
+          project_id: oceanic-muse-464012-k2
+
+      - name: Set up Docker auth for Artifact Registry
+        run: gcloud auth configure-docker europe-west1-docker.pkg.dev --quiet
+
+      - name: Define image URI
+        id: set-image-uri
+        run: |
+          IMAGE_URI="europe-west1-docker.pkg.dev/oceanic-muse-464012-k2/${{ vars.env }}-repo/pythonimg:latest"
+          echo "image_uri=$IMAGE_URI" >> $GITHUB_OUTPUT
+
+      - name: Build Docker image
+        run: |
+          docker build -t ${{ steps.set-image-uri.outputs.image_uri }} ./app
+
+      - name: Push image to Artifact Registry
+        run: |
+          docker push ${{ steps.set-image-uri.outputs.image_uri }}
+
+  deploy:
+    needs: [set-env, build-and-push-image]
     runs-on: ubuntu-latest
     environment: ${{ needs.set-env.outputs.env }}
 
@@ -62,11 +97,13 @@ jobs:
             terraform destroy -auto-approve \
               -var="secret_env_value=${{ secrets.SECRET_ENV_VALUE }}" \
               -var="service_account_email=${{ vars.SA_NAME }}" \
+              -var="image=${{ needs.build-and-push-image.outputs.image_uri }}" \
               -var-file="${{ needs.set-env.outputs.env }}/${{ needs.set-env.outputs.env }}.tfvars"
           else
             terraform apply -auto-approve \
               -var="secret_env_value=${{ secrets.SECRET_ENV_VALUE }}" \
               -var="service_account_email=${{ vars.SA_NAME }}" \
+              -var="image=${{ needs.build-and-push-image.outputs.image_uri }}" \
               -var-file="${{ needs.set-env.outputs.env }}/${{ needs.set-env.outputs.env }}.tfvars"
           fi
         working-directory: terraform
