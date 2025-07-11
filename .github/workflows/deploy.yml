@@ -6,6 +6,8 @@ on:
       - main
       - develop
       - staging
+    paths:
+      - 'app/**'
   workflow_dispatch:
     inputs:
       destroy:
@@ -33,29 +35,8 @@ jobs:
             echo "env=dev" >> $GITHUB_OUTPUT
           fi
 
-  changes:
-    needs: set-env
-    environment: ${{ needs.set-env.outputs.env }}
-    outputs:
-      src: ${{ steps.changes.outputs.src }}
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-        with:
-          fetch-depth: 2
-
-      - name: Path filter
-        uses: dorny/paths-filter@v2
-        id: changes
-        with:
-          filters: |
-            src:
-              - 'app/**'
-
   build-and-push-image:
-    needs: [set-env, changes]
-    if: ${{needs.changes.outputs.src == 'true'}}
+    needs: [set-env]
     runs-on: ubuntu-latest
     environment: ${{ needs.set-env.outputs.env }}
     outputs:
