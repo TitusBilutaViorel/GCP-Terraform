@@ -23,13 +23,13 @@ jobs:
   build-push:
     uses: ./.github/workflows/build-push.yml
     with:
-      env: ${{ inputs.env}}
+      env: ${{ github.ref_name == 'main' && 'prod' || github.ref_name == 'staging' && 'beta' || github.ref_name == 'develop' && 'dev'  }}
 
   terraform:
     needs: build-push
     uses: ./.github/workflows/terraform.yml
     with:
-      env: ${{ inputs.env }}
-      config-path: 'terraform/${{ inputs.env }}.tfvars'
+      env: ${{ github.ref_name == 'main' && 'prod' || github.ref_name == 'staging' && 'beta' || github.ref_name == 'develop' && 'dev' }}
+      config-path: 'terraform/${{ vars.env }}.tfvars'
 
   
