@@ -1,0 +1,51 @@
+name: Reusable terraform workflow
+
+on:
+  workflow_call:
+    inputs:
+      config-path:
+        required: true
+        type: string
+      env:
+        required: true
+        type: string 
+
+jobs:
+    deploy:
+        runs-on: ubuntu-latest
+        environment: ${{ inputs.env }}
+
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
+
+            - name: Authenticate to GCP via Workload Identity
+              uses: google-github-actions/auth@v2
+              with:
+                workload_identity_provider: 'projects/172250116490/locations/global/workloadIdentityPools/github-pool/providers/github-provider'
+                service_account: ${{ vars.SA_NAME }}
+                project_id: oceanic-muse-464012-k2
+
+            - name: Set up Terraform
+              uses: hashicorp/setup-terraform@v3
+
+            - name: Terraform Init
+              run: terraform init -backend-config="${{ vars.env }}/${{ vars.env }}.backend.config"
+              working-directory: terraform
+
+            - name: Terraform Apply or Destroy
+              run: |
+                if [[ "${{ github.event.inputs.destroy }}" == "true" ]]; then
+                    terraform destroy -auto-approve \
+                    -var="secret_env_value=${{ secrets.SECRET_ENV_VALUE }}" \
+                    -var="service_account_email=${{ vars.SA_NAME }}" \
+                    -var="image=${{ needs.build-and-push-image.outputs.image_uri }}" \
+                    -var-file="${{ vars.env }}/${{ vars.env }}.tfvars"
+                else
+                    terraform apply -auto-approve \
+                    -var="secret_env_value=${{ secrets.SECRET_ENV_VALUE }}" \
+                    -var="service_account_email=${{ vars.SA_NAME }}" \
+                    -var="image=${{ needs.build-and-push-image.outputs.image_uri }}" \
+                    -var-file="${{ vars.env }}/${{ vars.env }}.tfvars"
+                fi
+              working-directory: terraform

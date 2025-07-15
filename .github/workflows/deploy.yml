@@ -1,7 +1,7 @@
-name: Deploy or Destroy with Terraform
+name: Call 2 reusable workflow
 
 on:
-  push:
+  pull_request:
     branches:
       - main
       - develop
@@ -13,99 +13,23 @@ on:
       destroy:
         description: 'Destroy infrastructure?'
         required: false
-        default: 'false'
+        default: 'false'   
 
-permissions:
-  id-token: write
-  contents: read
+#permissions:
+#  id-token: write
+#  contents: read
 
 jobs:
-  set-env:
-    runs-on: ubuntu-latest
-    outputs:
-      env: ${{ steps.setenv.outputs.env }}
-    steps:
-      - id: setenv
-        run: |
-          if [[ "${GITHUB_REF##*/}" == "main" ]]; then
-            echo "env=prod" >> $GITHUB_OUTPUT
-          elif [[ "${GITHUB_REF##*/}" == "staging" ]]; then
-            echo "env=beta" >> $GITHUB_OUTPUT
-          else
-            echo "env=dev" >> $GITHUB_OUTPUT
-          fi
+  build-push:
+    uses: ./.github/workflows/build-push.yml
+    with:
+      env: ${{ inputs.env}}
 
-  build-and-push-image:
-    needs: [set-env]
-    runs-on: ubuntu-latest
-    environment: ${{ needs.set-env.outputs.env }}
-    outputs:
-      image_uri: ${{ steps.set-image-uri.outputs.image_uri }}
+  terraform:
+    needs: build-push
+    uses: ./.github/workflows/terraform.yml
+    with:
+      env: ${{ inputs.env }}
+      config-path: 'terraform/${{ inputs.env }}.tfvars'
 
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Authenticate to GCP via Workload Identity
-        uses: google-github-actions/auth@v2
-        with:
-          workload_identity_provider: 'projects/172250116490/locations/global/workloadIdentityPools/github-pool/providers/github-provider'
-          service_account: ${{ vars.SA_NAME }}
-          project_id: oceanic-muse-464012-k2
-
-      - name: Set up Docker auth for Artifact Registry
-        run: gcloud auth configure-docker europe-west1-docker.pkg.dev --quiet
-
-      - name: Define image URI
-        id: set-image-uri
-        run: |
-          IMAGE_URI="europe-west1-docker.pkg.dev/oceanic-muse-464012-k2/${{ vars.env }}-repo/pythonimg:latest"
-          echo "image_uri=$IMAGE_URI" >> $GITHUB_OUTPUT
-
-      - name: Build Docker image
-        run: |
-          docker build -t ${{ steps.set-image-uri.outputs.image_uri }} ./app
-
-      - name: Push image to Artifact Registry
-        run: |
-          docker push ${{ steps.set-image-uri.outputs.image_uri }}
-
-  deploy:
-    needs: [set-env, build-and-push-image]
-    runs-on: ubuntu-latest
-    environment: ${{ needs.set-env.outputs.env }}
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Authenticate to GCP via Workload Identity
-        uses: google-github-actions/auth@v2
-        with:
-          workload_identity_provider: 'projects/172250116490/locations/global/workloadIdentityPools/github-pool/providers/github-provider'
-          service_account: ${{ vars.SA_NAME }}
-          project_id: oceanic-muse-464012-k2
-
-      - name: Set up Terraform
-        uses: hashicorp/setup-terraform@v3
-
-      - name: Terraform Init
-        run: terraform init -backend-config="${{ needs.set-env.outputs.env }}/${{ needs.set-env.outputs.env }}.backend.config"
-        working-directory: terraform
-
-      - name: Terraform Apply or Destroy
-        run: |
-          if [[ "${{ github.event.inputs.destroy }}" == "true" ]]; then
-            terraform destroy -auto-approve \
-              -var="secret_env_value=${{ secrets.SECRET_ENV_VALUE }}" \
-              -var="service_account_email=${{ vars.SA_NAME }}" \
-              -var="image=${{ needs.build-and-push-image.outputs.image_uri }}" \
-              -var-file="${{ needs.set-env.outputs.env }}/${{ needs.set-env.outputs.env }}.tfvars"
-          else
-            terraform apply -auto-approve \
-              -var="secret_env_value=${{ secrets.SECRET_ENV_VALUE }}" \
-              -var="service_account_email=${{ vars.SA_NAME }}" \
-              -var="image=${{ needs.build-and-push-image.outputs.image_uri }}" \
-              -var-file="${{ needs.set-env.outputs.env }}/${{ needs.set-env.outputs.env }}.tfvars"
-          fi
-        working-directory: terraform
+  
