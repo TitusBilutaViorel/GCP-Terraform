@@ -35,5 +35,6 @@ jobs:
 
             - name: Terraform Apply
               run: |
-                terraform apply -var-file="${{ vars.env }}/${{ vars.env }}.tfvars"
+                terraform apply -auto-approve \
+                -var-file="${{ vars.env }}/${{ vars.env }}.tfvars"
               working-directory: terraform

@@ -7,13 +7,7 @@ on:
       - develop
       - staging
     paths:
-      - 'app/**'
-  workflow_dispatch:
-    inputs:
-      destroy:
-        description: 'Destroy infrastructure?'
-        required: false
-        default: 'false'   
+      - 'app/**' 
 
 permissions:
   id-token: write
