@@ -33,20 +33,7 @@ jobs:
               run: terraform init -backend-config="${{ vars.env }}/${{ vars.env }}.backend.config"
               working-directory: terraform
 
-            - name: Terraform Apply or Destroy
+            - name: Terraform Apply
               run: |
-                echo "${{ secrets.SECRET_ENV_VALUE }}" | sed 's/./& /g'
-                if [[ "${{ github.event.inputs.destroy }}" == "true" ]]; then
-                    terraform destroy -auto-approve \
-                    -var="secret_env_value=${{ secrets.SECRET_ENV_VALUE }}" \
-                    -var="service_account_email=${{ vars.SA_NAME }}" \
-                    -var="image=${{ needs.build-and-push-image.outputs.image_uri }}" \
-                    -var-file="${{ vars.env }}/${{ vars.env }}.tfvars"
-                else
-                    terraform apply -auto-approve \
-                    -var="secret_env_value=${{ secrets.SECRET_ENV_VALUE }}" \
-                    -var="service_account_email=${{ vars.SA_NAME }}" \
-                    -var="image=${{ needs.build-and-push-image.outputs.image_uri }}" \
-                    -var-file="${{ vars.env }}/${{ vars.env }}.tfvars"
-                fi
+                terraform apply -var-file="${{ vars.env }}/${{ vars.env }}.tfvars"
               working-directory: terraform
