@@ -6,7 +6,12 @@ on:
       - main
       - develop
       - staging
-
+  workflow_call:
+    inputs:
+      env:
+        required: true
+        type: string
+        
 permissions:
   id-token: write
   contents: read
