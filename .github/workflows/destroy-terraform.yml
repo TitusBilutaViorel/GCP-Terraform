@@ -30,6 +30,10 @@ jobs:
             - name: Set up Terraform
               uses: hashicorp/setup-terraform@v3
 
+            - name: Terraform Init
+              run: terraform init -backend-config="${{ vars.env }}/${{ vars.env }}.backend.config"
+              working-directory: terraform
+
             - name: Terraform Destroy
               run: |
                 terraform destroy -auto-approve \
