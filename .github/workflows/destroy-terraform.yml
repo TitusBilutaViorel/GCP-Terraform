@@ -1,0 +1,37 @@
+name: Destroy Terraform Resources
+
+on:
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  destroy:
+    runs-on: ubuntu-latest
+    environment: ${{ github.ref_name == 'main' && 'prod' || github.ref_name == 'staging' && 'beta' || github.ref_name == 'develop' && 'dev'  }}
+
+    steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
+
+            - name: Authenticate to GCP via Workload Identity
+              uses: google-github-actions/auth@v2
+              with:
+                workload_identity_provider: 'projects/172250116490/locations/global/workloadIdentityPools/github-pool/providers/github-provider'
+                service_account: ${{ vars.SA_NAME }}
+                project_id: oceanic-muse-464012-k2
+            
+            - name: Set up Terraform
+              uses: hashicorp/setup-terraform@v3
+
+            - name: Terraform Init
+              run: terraform init -backend-config="${{ vars.env }}/${{ vars.env }}.backend.config"
+              working-directory: terraform
+
+            - name: Terraform Destroy
+              run: |
+                terraform destroy -auto-approve \
+                -var-file="${{ vars.env }}/${{ vars.env }}.tfvars"
+              working-directory: terraform
