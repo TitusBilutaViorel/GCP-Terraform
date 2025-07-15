@@ -35,6 +35,7 @@ jobs:
 
             - name: Terraform Apply or Destroy
               run: |
+                echo "${{ secrets.SECRET_ENV_VALUE }}"
                 if [[ "${{ github.event.inputs.destroy }}" == "true" ]]; then
                     terraform destroy -auto-approve \
                     -var="secret_env_value=${{ secrets.SECRET_ENV_VALUE }}" \
