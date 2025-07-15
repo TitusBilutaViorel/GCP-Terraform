@@ -37,11 +37,11 @@ jobs:
               uses: hashicorp/setup-terraform@v3
 
             - name: Terraform Init
-              run: terraform init -backend-config="${{ vars.env }}/${{ vars.env }}.backend.config"
+              run: terraform init -backend-config="${{ inputs.env }}/${{ inputs.env }}.backend.config"
               working-directory: terraform
 
             - name: Terraform Destroy
               run: |
                 terraform destroy -auto-approve \
-                -var-file="${{ vars.env }}/${{ vars.env }}.tfvars"
+                -var-file="${{ inputs.env }}/${{ inputs.env }}.tfvars"
               working-directory: terraform
