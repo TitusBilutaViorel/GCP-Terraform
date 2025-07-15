@@ -6,12 +6,13 @@ on:
       - main
       - develop
       - staging
-  workflow_call:
+  workflow_dispatch:
     inputs:
       env:
+        description: 'Environment to destroy resources in'
         required: true
         type: string
-        
+
 permissions:
   id-token: write
   contents: read
