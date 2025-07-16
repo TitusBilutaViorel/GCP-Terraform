@@ -1,15 +1,13 @@
 name: Build and Push Action
+description: Build and push Docker images to GCP Artifact Registry
 
 inputs:
   env:
+    description: Environment name (e.g., prod, beta, dev)
     required: true
-    type: string
 
 runs: 
     using: "composite"
-    environment: ${{ inputs.env }}
-    outputs:
-      image_uri: ${{ steps.set-image-uri.outputs.image_uri }}
 
     steps:
       - name: Checkout code
@@ -23,19 +21,23 @@ runs:
           project_id: oceanic-muse-464012-k2
 
       - name: Set up Docker auth for Artifact Registry
+        shell: bash
         run: gcloud auth configure-docker europe-west1-docker.pkg.dev --quiet
 
       - name: Define image URI
         id: set-image-uri
+        shell: bash
         run: |
           IMAGE_URI="europe-west1-docker.pkg.dev/oceanic-muse-464012-k2/${{ vars.env }}-repo/pythonimg:latest"
           echo "image_uri=$IMAGE_URI" >> $GITHUB_OUTPUT
 
       - name: Build Docker image
+        shell: bash
         run: |
           docker build -t ${{ steps.set-image-uri.outputs.image_uri }} ./app
 
       - name: Push image to Artifact Registry
+        shell: bash
         run: |
           docker push ${{ steps.set-image-uri.outputs.image_uri }}
 

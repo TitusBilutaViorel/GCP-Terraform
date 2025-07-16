@@ -1,16 +1,16 @@
 name: Terraform Action
+description: Deploy Terraform resources to GCP
 
 inputs:
   config-path:
+    description: Path to the Terraform configuration file
     required: true
-    type: string
   env:
+    description: Environment name (e.g., prod, beta, dev)
     required: true
-    type: string 
 
 runs:
     using: "composite"
-    environment: ${{ inputs.env }}
 
     steps:
       - name: Checkout code
@@ -27,10 +27,12 @@ runs:
         uses: hashicorp/setup-terraform@v3
 
       - name: Terraform Init
+        shell: bash
         run: terraform init -backend-config="${{ vars.env }}/${{ vars.env }}.backend.config"
         working-directory: terraform
 
       - name: Terraform Apply
+        shell: bash
         run: |
           terraform apply -auto-approve \
           -var-file="${{ vars.env }}/${{ vars.env }}.tfvars"
