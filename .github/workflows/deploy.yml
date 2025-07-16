@@ -21,11 +21,6 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Use env and sa_name
-        run: |
-          echo "ENV is ${{ inputs.env }}"
-          echo "SA is ${{ inputs.SA_NAME }}"
-
       - name: Build and Push Docker Image
         uses: ./.github/actions/build-push
         with:
