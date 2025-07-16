@@ -36,7 +36,7 @@ runs:
         id: set-image-uri
         shell: bash
         run: |
-          IMAGE_URI="europe-west1-docker.pkg.dev/oceanic-muse-464012-k2/${env}-repo/pythonimg:latest"
+          IMAGE_URI="europe-west1-docker.pkg.dev/oceanic-muse-464012-k2/${{ inputs.env }}-repo/pythonimg:latest"
           echo "image_uri=$IMAGE_URI" >> $GITHUB_OUTPUT
         env:
           env: ${{ inputs.env }}
