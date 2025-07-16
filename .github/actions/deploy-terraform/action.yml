@@ -5,7 +5,7 @@ inputs:
   config-path:
     description: Path to the Terraform configuration file
     required: true
-  env:
+  ENV:
     description: Environment name (e.g., prod, beta, dev)
     required: true
   SA_NAME:
@@ -31,12 +31,12 @@ runs:
 
       - name: Terraform Init
         shell: bash
-        run: terraform init -backend-config="${{ inputs.env }}/${{ inputs.env }}.backend.config"
+        run: terraform init -backend-config="${{ inputs.ENV }}/${{ inputs.ENV }}.backend.config"
         working-directory: terraform
 
       - name: Terraform Apply
         shell: bash
         run: |
           terraform apply -auto-approve \
-          -var-file="${{ inputs.env }}/${{ inputs.env }}.tfvars"
+          -var-file="${{ inputs.ENV }}/${{ inputs.ENV }}.tfvars"
         working-directory: terraform
