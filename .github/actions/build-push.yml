@@ -7,7 +7,6 @@ inputs:
 
 runs: 
     using: "composite"
-    runs-on: ubuntu-latest
     environment: ${{ inputs.env }}
     outputs:
       image_uri: ${{ steps.set-image-uri.outputs.image_uri }}
