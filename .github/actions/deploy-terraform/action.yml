@@ -8,6 +8,9 @@ inputs:
   env:
     description: Environment name (e.g., prod, beta, dev)
     required: true
+  SA_NAME:
+    description: Service account name for GCP authentication
+    required: true
 
 runs:
     using: "composite"
@@ -28,14 +31,12 @@ runs:
 
       - name: Terraform Init
         shell: bash
-        run: terraform init -backend-config="${{ vars.env }}/${{ vars.env }}.backend.config"
+        run: terraform init -backend-config="${{ inputs.env }}/${{ inputs.env }}.backend.config"
         working-directory: terraform
-        env:
-          env: ${{ inputs.env }}
 
       - name: Terraform Apply
         shell: bash
         run: |
           terraform apply -auto-approve \
-          -var-file="${{ vars.env }}/${{ vars.env }}.tfvars"
+          -var-file="${{ inputs.env }}/${{ inputs.env }}.tfvars"
         working-directory: terraform
