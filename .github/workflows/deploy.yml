@@ -1,4 +1,4 @@
-name: Call 2 reusable workflows
+name: Call 2 actions
 
 on:
   pull_request:
