@@ -18,7 +18,11 @@ jobs:
   build-push:
     runs-on: ubuntu-latest
     steps:
-      - uses: ./.github/actions/build-push/action.yml
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Build and Push Docker Image
+        uses: ./.github/actions/build-push
         with:
           env: ${{ github.ref_name == 'main' && 'prod' || github.ref_name == 'staging' && 'beta' || github.ref_name == 'develop' && 'dev'  }}
 
@@ -26,7 +30,11 @@ jobs:
     runs-on: ubuntu-latest
     needs: build-push
     steps:
-      - uses: ./.github/actions/deploy-terraform/action.yml
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Deploy Terraform Resources
+        uses: ./.github/actions/deploy-terraform
         with:
           env: ${{ github.ref_name == 'main' && 'prod' || github.ref_name == 'staging' && 'beta' || github.ref_name == 'develop' && 'dev' }}
           config-path: 'terraform/${{ vars.env }}.tfvars'
