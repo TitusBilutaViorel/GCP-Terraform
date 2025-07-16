@@ -31,7 +31,8 @@ runs:
 
       - name: Terraform Init
         shell: bash
-        run: terraform init -backend-config="${{ inputs.ENV }}/${{ inputs.ENV }}.backend.config"
+        run: |
+          terraform init -backend-config="${{ inputs.ENV }}/${{ inputs.ENV }}.backend.config"
         working-directory: terraform
 
       - name: Terraform Apply
