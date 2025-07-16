@@ -1,15 +1,12 @@
-name: Reusable build and push workflow
+name: Build and Push Action
 
-on:
-  workflow_call:
-    inputs:
-      env:
-        required: true
-        type: string
+inputs:
+  env:
+    required: true
+    type: string
 
-jobs:
-  build-and-push-image:
-    runs-on: ubuntu-latest
+runs: 
+    using: "composite"
     environment: ${{ inputs.env }}
     outputs:
       image_uri: ${{ steps.set-image-uri.outputs.image_uri }}
