@@ -30,6 +30,7 @@ jobs:
 
   terraform:
     runs-on: ubuntu-latest
+    environment: ${{ github.ref_name == 'main' && 'prod' || github.ref_name == 'staging' && 'beta' || github.ref_name == 'develop' && 'dev' }}
     needs: build-push
     steps:
       - name: Checkout repo
