@@ -18,6 +18,8 @@ jobs:
         steps:
           - name: Checkout repository
             uses: actions/checkout@v2
+          - name: Make script executable
+            run: chmod +x ./50percent.sh
           - name: Run Sleep Script
             run: ./50percent.sh  
   
