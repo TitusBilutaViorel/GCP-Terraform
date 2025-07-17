@@ -1,4 +1,4 @@
-name: Automation Staging Workflow
+name: Automation Main Workflow
 
 on:
   pull_request:
