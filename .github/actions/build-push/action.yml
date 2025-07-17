@@ -1,0 +1,52 @@
+name: Build and Push Action
+description: Build and push Docker images to GCP Artifact Registry
+
+inputs:
+  ENV:
+    description: Environment name (e.g., prod, beta, dev)
+    required: true
+  SA_NAME:
+    description: Service account name for GCP authentication
+    required: true
+outputs:
+  image_uri:
+    description: 'The full image URI for the Docker image'
+    value: ${{ steps.set-image-uri.outputs.image_uri }}
+
+
+runs: 
+    using: "composite"
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Authenticate to GCP via Workload Identity
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: 'projects/172250116490/locations/global/workloadIdentityPools/github-pool/providers/github-provider'
+          service_account: ${{ inputs.SA_NAME }}
+          project_id: oceanic-muse-464012-k2
+
+      - name: Set up Docker auth for Artifact Registry
+        shell: bash
+        run: gcloud auth configure-docker europe-west1-docker.pkg.dev --quiet
+
+      - name: Define image URI
+        id: set-image-uri
+        shell: bash
+        run: |
+          IMAGE_URI="europe-west1-docker.pkg.dev/oceanic-muse-464012-k2/${{ inputs.ENV }}-repo/pythonimg:latest"
+          echo "image_uri=$IMAGE_URI" >> $GITHUB_OUTPUT
+
+      - name: Build Docker image
+        shell: bash
+        run: |
+          docker build -t ${{ steps.set-image-uri.outputs.image_uri }} ./app
+
+      - name: Push image to Artifact Registry
+        shell: bash
+        run: |
+          docker push ${{ steps.set-image-uri.outputs.image_uri }}
+
+  

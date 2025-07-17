@@ -1,0 +1,46 @@
+name: Call 2 actions
+
+on:
+  pull_request:
+    branches:
+      - main
+      - develop
+      - staging
+    paths:
+      - 'app/**'
+  workflow_dispatch:
+     
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  build-push:
+    runs-on: ubuntu-latest
+    environment: ${{ github.ref_name == 'main' && 'prod' || github.ref_name == 'staging' && 'beta' || github.ref_name == 'develop' && 'dev' }}
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Build and Push Docker Image
+        uses: ./.github/actions/build-push
+        with:
+          env: ${{ github.ref_name == 'main' && 'prod' || github.ref_name == 'staging' && 'beta' || github.ref_name == 'develop' && 'dev'  }}
+          SA_NAME: ${{ vars.SA_NAME }}
+
+  terraform:
+    runs-on: ubuntu-latest
+    environment: ${{ github.ref_name == 'main' && 'prod' || github.ref_name == 'staging' && 'beta' || github.ref_name == 'develop' && 'dev' }}
+    needs: build-push
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Deploy Terraform Resources
+        uses: ./.github/actions/deploy-terraform
+        with:
+          env: ${{ github.ref_name == 'main' && 'prod' || github.ref_name == 'staging' && 'beta' || github.ref_name == 'develop' && 'dev' }}
+          config-path: 'terraform/${{ vars.env }}.tfvars'
+          SA_NAME: ${{ vars.SA_NAME }}
+
+  
