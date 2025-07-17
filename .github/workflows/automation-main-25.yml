@@ -1,0 +1,25 @@
+name: Automation Main Workflow
+
+on:
+  pull_request:
+    branches:
+        - main
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+    sleep-script:
+        runs-on: ubuntu-latest
+        defaults:
+          run:
+            working-directory: ./sleepscript
+        steps:
+          - name: Checkout repository
+            uses: actions/checkout@v2
+          - name: Make script executable
+            run: chmod +x ./25percent.sh
+          - name: Run Sleep Script
+            run: ./25percent.sh  
+  
