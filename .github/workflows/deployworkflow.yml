@@ -1,0 +1,30 @@
+name: Call 2 reusable workflows
+
+on:
+  pull_request:
+    branches:
+      - main
+      - develop
+      - staging
+    paths:
+      - 'app/**'
+  workflow_dispatch:
+     
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  build-push:
+    uses: ./.github/workflows/build-push.yml
+    with:
+      env: ${{ github.ref_name == 'main' && 'prod' || github.ref_name == 'staging' && 'beta' || github.ref_name == 'develop' && 'dev'  }}
+
+  terraform:
+    needs: build-push
+    uses: ./.github/workflows/deploy-terraform.yml
+    with:
+      env: ${{ github.ref_name == 'main' && 'prod' || github.ref_name == 'staging' && 'beta' || github.ref_name == 'develop' && 'dev' }}
+      config-path: 'terraform/${{ vars.env }}.tfvars'
+
+  
