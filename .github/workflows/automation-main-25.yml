@@ -1,9 +1,9 @@
-name: Automation Staging Workflow
+name: Automation Main Workflow
 
 on:
   pull_request:
     branches:
-        - staging
+        - main
 
 permissions:
   id-token: write
