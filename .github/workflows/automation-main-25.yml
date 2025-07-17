@@ -3,7 +3,7 @@ name: Automation Staging Workflow
 on:
   pull_request:
     branches:
-        - staging
+        - main
 
 permissions:
   id-token: write
